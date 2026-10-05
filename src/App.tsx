@@ -1,7 +1,35 @@
+import { useState } from 'react'
 import Calculator from './components/Calculator'
+import { CalculationHistory } from './components/CalculationHistory'
+import type { CalculationRecord } from './types/calculator'
 
 function App() {
-  return <Calculator initialDisplay="0" />
+  const [history, setHistory] = useState<CalculationRecord[]>([])
+
+  const onClear = () => {
+    setHistory([])
+  }
+
+  const onAddToHistory = (expression: string, result: string) => {
+    setHistory(prev => [{ id: Date.now().toString(), expression, result, timestamp: Date.now() }, ...prev])
+  }
+
+  return (
+    <div className="flex flex-col items-center gap-6 max-w-7xl mx-auto p-4">
+      <div className="flex flex-col items-start gap-2">
+        <Calculator
+          initialDisplay="0"
+          onClear={onClear}
+          onAddToHistory={onAddToHistory}
+        />
+        <CalculationHistory
+          records={history}
+          onClear={onClear}
+          onDeleteLast={() => {}}
+        />
+      </div>
+    </div>
+  )
 }
 
 export default App

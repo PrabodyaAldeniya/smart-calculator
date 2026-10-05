@@ -1,56 +1,174 @@
 import { useState } from 'react'
 import { CalculatorDisplay } from './CalculatorDisplay'
 import { CalculatorButton } from './CalculatorButton'
+import type { Operator } from '../types/calculator'
 
 type CalculatorProps = {
   initialDisplay?: string
+  onClear: () => void
+  onAddToHistory: (expression: string, result: string) => void
 }
 
-const Calculator = ({ initialDisplay }: CalculatorProps = { initialDisplay: undefined }) => {
+const Calculator = ({
+  initialDisplay,
+  onClear,
+  onAddToHistory,
+}: CalculatorProps) => {
   const [display, setDisplay] = useState<string>(
     initialDisplay ?? '0'
   )
-  const [history, setHistory] = useState<
-    Array<{ id: string; expression: string; result: string; timestamp: number }>
-  >([])
+  const [previousValue, setPreviousValue] = useState<number | null>(null)
+  const [operator, setOperator] = useState<Operator | null>(null)
+  const [waitingForOperand, setWaitingForOperand] = useState<boolean>(false)
+  const [expression, setExpression] = useState<string>('0')
 
   const handleNumber = (digit: string) => {
     if (display === 'Error') {
       setDisplay('0')
     }
     setDisplay(prev => {
+      if (waitingForOperand) {
+        return digit
+      }
       if (prev === '0') return digit
       return prev + digit
     })
+    if (waitingForOperand) {
+      setExpression(prev => prev === '0' ? digit : prev + ' ' + digit)
+    } else if (expression === '0') {
+      setExpression(digit)
+    } else {
+      setExpression(prev => prev + digit)
+    }
   }
 
   const handleClear = () => {
     setDisplay('0')
-    setHistory([])
+    setPreviousValue(null)
+    setOperator(null)
+    setWaitingForOperand(false)
+    setExpression('0')
+    onClear()
   }
 
-  const handleBackspace = () => {
-    setDisplay(prev => prev.length > 1 ? prev.slice(0, -1) : '0')
+  const handlePlusMinus = () => {
+    if (display === 'Error') return
+    const current = parseFloat(display)
+    if (isNaN(current)) return
+    setDisplay(String(-current))
+    setExpression(prev => {
+      const trimmed = prev.trim()
+      if (/^-?\d+(?:\.\d+)?$/.test(trimmed)) {
+        return -current === Math.abs(current) ? `-${trimmed}` : trimmed.replace(/^-/, '')
+      }
+      const parts = trimmed.split(/[\s+\-×÷%]/)
+      const lastNum = parts.pop()
+      if (lastNum && /^-?\d+(?:\.\d+)?$/.test(lastNum)) {
+        const newLast = -current === Math.abs(current) ? `-${lastNum}` : lastNum.replace(/^-/, '')
+        parts.push(newLast)
+        return parts.join(' ')
+      }
+      return prev
+    })
   }
 
   const handleDecimal = () => {
     if (!display.includes('.')) {
-      setDisplay(prev => prev + '.')
+      if (waitingForOperand) {
+        setDisplay('0.')
+      } else {
+        setDisplay(prev => prev + '.')
+      }
+    }
+    if (!expression.includes('.')) {
+      setExpression(prev => prev + '.')
+    }
+  }
+
+  const handleOperator = (op: string) => {
+    const current = parseFloat(display)
+
+    if (isNaN(current)) return
+
+    if (operator !== null && previousValue !== null && !waitingForOperand) {
+      let result: number
+      switch (operator) {
+        case '+': result = previousValue + current; break
+        case '-': result = previousValue - current; break
+        case '×': result = previousValue * current; break
+        case '÷':
+          if (current === 0) {
+            setDisplay('Error')
+            return
+          }
+          result = previousValue / current
+          break
+        case '%': result = previousValue % current; break
+        default: return
+      }
+
+      if (!isFinite(result)) {
+        setDisplay('Error')
+      } else {
+        const roundedResult = Math.round(result * 1000000) / 1000000
+        setDisplay(String(roundedResult))
+        setPreviousValue(roundedResult as number)
+        setExpression(String(roundedResult))
+      }
+    } else {
+      setPreviousValue(current)
+      setOperator(op as Operator)
+      setWaitingForOperand(true)
+      if (expression === '0') {
+        setExpression(String(current) + ' ')
+      } else {
+        setExpression(prev => prev + op + ' ')
+      }
     }
   }
 
   const handleEquals = () => {
-    setDisplay('0')
-  }
+    if (operator === null || waitingForOperand) return
 
-  const handleOperator = (_op: string) => {
-    // Full calculation logic will be added later
-    setDisplay('0')
+    const current = parseFloat(display)
+    if (isNaN(current)) return
+
+    let result: number
+
+    switch (operator) {
+      case '+': result = (previousValue ?? 0) + current; break
+      case '-': result = (previousValue ?? 0) - current; break
+      case '×': result = (previousValue ?? 0) * current; break
+      case '÷':
+        if (current === 0) {
+          setDisplay('Error')
+          return
+        }
+        result = (previousValue ?? 0) / current
+        break
+      case '%': result = (previousValue ?? 0) % current; break
+      default: return
+    }
+
+    const roundedResult = Math.round(result * 1000000) / 1000000
+
+    if (!isFinite(result)) {
+      setDisplay('Error')
+    } else {
+      setDisplay(String(roundedResult))
+      const exprStr = `${previousValue ?? 0} ${operator} ${current} = ${roundedResult}`
+      onAddToHistory(exprStr, String(roundedResult))
+    }
+
+    setPreviousValue(roundedResult as number)
+    setOperator(null)
+    setWaitingForOperand(true)
+    setExpression(String(roundedResult))
   }
 
   return (
     <div className="calculator-container">
-      <CalculatorDisplay display={display} history={history} />
+      <CalculatorDisplay display={display} expression={expression} />
 
       <div className="calculator-buttons">
         <button
@@ -66,7 +184,7 @@ const Calculator = ({ initialDisplay }: CalculatorProps = { initialDisplay: unde
           <CalculatorButton
             variant="function"
             label="+/-"
-            onClick={handleBackspace}
+            onClick={handlePlusMinus}
           />
           <CalculatorButton variant="operator" label="%" onClick={() => handleOperator('%')} />
           <CalculatorButton variant="operator" label="÷" onClick={() => handleOperator('÷')} />
