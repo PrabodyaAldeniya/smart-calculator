@@ -34,7 +34,8 @@ const Calculator = ({
       return prev + digit
     })
     if (waitingForOperand) {
-      setExpression(prev => prev === '0' ? digit : prev + ' ' + digit)
+      setWaitingForOperand(false)
+      setExpression(prev => prev + digit)
     } else if (expression === '0') {
       setExpression(digit)
     } else {
@@ -110,15 +111,15 @@ const Calculator = ({
       setOperator(op)
       setWaitingForOperand(true)
       if (expression === '0') {
-        setExpression(String(current) + ' ')
+        setExpression(`${current} ${op} `)
       } else {
-        setExpression(prev => prev + op + ' ')
+        setExpression(prev => prev + `${op} `)
       }
     }
   }
 
   const handleEquals = () => {
-    if (operator === null || waitingForOperand) return
+    if (operator === null) return
 
     const current = parseFloat(display)
     if (isNaN(current)) return
@@ -145,15 +146,20 @@ const Calculator = ({
     if (!isFinite(result)) {
       setDisplay('Error')
     } else {
+      // Build the expression string for history and small display
+      const exprForSmall = `${previousValue ?? 0} ${operator} ${current}`
+      const exprForHistory = `${exprForSmall} = ${roundedResult}`
       setDisplay(String(roundedResult))
-      const exprStr = `${previousValue ?? 0} ${operator} ${current} = ${roundedResult}`
-      onAddToHistory(exprStr, String(roundedResult))
+      onAddToHistory(exprForHistory, String(roundedResult))
+      // Preserve the original expression for small display
+      setExpression(exprForSmall)
     }
 
+    // For chained calculations: previousValue holds the result,
+    // so the next operator can use it as the first operand
     setPreviousValue(roundedResult as number)
     setOperator(null)
     setWaitingForOperand(true)
-    setExpression(String(roundedResult))
     setAnsValue(String(roundedResult))
   }
 
