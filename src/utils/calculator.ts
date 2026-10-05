@@ -1,4 +1,4 @@
-import type { Operator, CalculationRecord } from '../types/calculator'
+import type { Operator, CalculationRecord, CalculatorMode } from '../types/calculator'
 
 // Calculator display state
 export type DisplayValue = string
@@ -11,6 +11,21 @@ export type CalculatorAction =
   | { type: 'INPUT_CLEAR' }
   | { type: 'INPUT_BACKSPACE' }
   | { type: 'INPUT_DECIMAL' }
+  | { type: 'INPUT_SIN' }
+  | { type: 'INPUT_COS' }
+  | { type: 'INPUT_TAN' }
+  | { type: 'INPUT_LN' }
+  | { type: 'INPUT_LOG' }
+  | { type: 'INPUT_SQRT' }
+  | { type: 'INPUT_FACT' }
+  | { type: 'INPUT_POWER' }
+  | { type: 'INPUT_PI' }
+  | { type: 'INPUT_E' }
+  | { type: 'INPUT_LPAREN' }
+  | { type: 'INPUT_RPAREN' }
+  | { type: 'INPUT_INV' }
+  | { type: 'INPUT_EXP' }
+  | { type: 'INPUT_TOGGLE_MODE' }
 
 // Calculator state managed by TypeScript types
 export interface CalculatorState {
@@ -18,6 +33,7 @@ export interface CalculatorState {
   previousValue: number | null
   operator: Operator | null
   waitingForOperand: boolean
+  mode: CalculatorMode
   history: CalculationRecord[]
 }
 
@@ -27,160 +43,8 @@ export const initialState: CalculatorState = {
   previousValue: null,
   operator: null,
   waitingForOperand: false,
+  mode: 'DEG',
   history: [],
-}
-
-// Reducer function to handle calculator actions
-export const calculatorReducer = (
-  state: CalculatorState,
-  action: CalculatorAction,
-): CalculatorState => {
-  switch (action.type) {
-    case 'INPUT_NUMBER': {
-      const { digit } = action
-      if (state.waitingForOperand) {
-        return {
-          ...state,
-          display: digit,
-          waitingForOperand: false,
-        }
-      }
-
-      const currentDisplay = state.display === '0' ? '' : state.display
-      const newDisplay = currentDisplay + digit
-
-      // Prevent display from being too long
-      if (newDisplay.length > 15) {
-        return state
-      }
-
-      return {
-        ...state,
-        display: newDisplay === '' ? '0' : newDisplay,
-      }
-    }
-
-    case 'INPUT_OPERATOR': {
-      const { operator } = action
-      const current = parseFloat(state.display)
-
-      if (isNaN(current)) {
-        return state
-      }
-
-      const { previousValue, operator: currentOperator } = state
-
-      // If there's a pending operator, calculate first
-      if (previousValue !== null && currentOperator) {
-        const calculated = applyOperator(state, currentOperator)
-        return calculatorReducer(calculated, { type: 'INPUT_OPERATOR', operator })
-      }
-
-      return {
-        ...state,
-        previousValue: current,
-        operator: operator,
-        waitingForOperand: true,
-      }
-    }
-
-    case 'INPUT_EQUALS': {
-      return applyOperator(state, state.operator ?? null)
-    }
-
-    case 'INPUT_CLEAR': {
-      return initialState
-    }
-
-    case 'INPUT_BACKSPACE': {
-      if (state.display.length <= 1) {
-        return { ...state, display: '0' }
-      }
-
-      const newDisplay = state.display.slice(0, -1)
-      return {
-        ...state,
-        display: newDisplay === '' ? '0' : newDisplay,
-      }
-    }
-
-    case 'INPUT_DECIMAL': {
-      if (state.waitingForOperand) {
-        return {
-          ...state,
-          display: '0.',
-          waitingForOperand: false,
-        }
-      }
-
-      if (!state.display.includes('.')) {
-        return {
-          ...state,
-          display: state.display + '.',
-        }
-      }
-
-      return state
-    }
-
-    default:
-      return state
-  }
-}
-
-// Apply a single operator to the current state
-const applyOperator = (state: CalculatorState, operator: Operator | null): CalculatorState => {
-  if (!operator || state.waitingForOperand) {
-    return state
-  }
-
-  const current = parseFloat(state.display)
-  if (isNaN(current)) {
-    return { ...state, display: 'Error' }
-  }
-
-  const { previousValue } = state
-
-  let result: number
-
-  switch (operator) {
-    case '+':
-      result = (previousValue ?? 0) + current
-      break
-    case '-':
-      result = (previousValue ?? 0) - current
-      break
-    case '×':
-      result = (previousValue ?? 0) * current
-      break
-    case '÷':
-      if (current === 0) {
-        return { ...state, display: 'Error' }
-      }
-      result = (previousValue ?? 0) / current
-      break
-    case '%':
-      result = (previousValue ?? 0) % current
-      break
-    default:
-      return state
-  }
-
-  // Check for overflow/infinity
-  if (!isFinite(result)) {
-    return { ...state, display: 'Error' }
-  }
-
-  // Round to reasonable precision
-  const roundedResult = Math.round(result * 1000000) / 1000000
-
-  return {
-    display: String(roundedResult),
-    previousValue: roundedResult,
-    operator: null,
-    waitingForOperand: true,
-    history: state.history,
-  }
 }
 
 // Add a calculation record to history
@@ -215,3 +79,9 @@ export const deleteLastHistoryRecord = (state: CalculatorState): CalculatorState
 
 // Get history records count
 export const getHistoryCount = (state: CalculatorState): number => state.history.length
+
+// Toggle DEG/RAD mode
+export const toggleMode = (state: CalculatorState): CalculatorState => ({
+  ...state,
+  mode: state.mode === 'DEG' ? 'RAD' : 'DEG',
+})

@@ -15,19 +15,17 @@ function App() {
   }
 
   return (
-    <div className="flex flex-col items-center gap-6 max-w-7xl mx-auto p-4">
-      <div className="flex flex-col items-start gap-2">
-        <Calculator
-          initialDisplay="0"
-          onClear={onClear}
-          onAddToHistory={onAddToHistory}
-        />
-        <CalculationHistory
-          records={history}
-          onClear={onClear}
-          onDeleteLast={() => {}}
-        />
-      </div>
+    <div className="main-page">
+      <Calculator
+        initialDisplay="0"
+        onClear={onClear}
+        onAddToHistory={onAddToHistory}
+      />
+      <CalculationHistory
+        records={history}
+        onClear={onClear}
+        onDeleteLast={() => {}}
+      />
     </div>
   )
 }

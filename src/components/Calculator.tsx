@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { CalculatorDisplay } from './CalculatorDisplay'
 import { CalculatorButton } from './CalculatorButton'
-import type { Operator } from '../types/calculator'
+import type { Operator, CalculatorMode } from '../types/calculator'
 
 type CalculatorProps = {
   initialDisplay?: string
@@ -14,13 +14,13 @@ const Calculator = ({
   onClear,
   onAddToHistory,
 }: CalculatorProps) => {
-  const [display, setDisplay] = useState<string>(
-    initialDisplay ?? '0'
-  )
+  const [display, setDisplay] = useState<string>(initialDisplay ?? '0')
   const [previousValue, setPreviousValue] = useState<number | null>(null)
   const [operator, setOperator] = useState<Operator | null>(null)
   const [waitingForOperand, setWaitingForOperand] = useState<boolean>(false)
   const [expression, setExpression] = useState<string>('0')
+  const [mode, setMode] = useState<CalculatorMode>('DEG')
+  const [ansValue, setAnsValue] = useState<string | null>(null)
 
   const handleNumber = (digit: string) => {
     if (display === 'Error') {
@@ -48,28 +48,8 @@ const Calculator = ({
     setOperator(null)
     setWaitingForOperand(false)
     setExpression('0')
+    setAnsValue(null)
     onClear()
-  }
-
-  const handlePlusMinus = () => {
-    if (display === 'Error') return
-    const current = parseFloat(display)
-    if (isNaN(current)) return
-    setDisplay(String(-current))
-    setExpression(prev => {
-      const trimmed = prev.trim()
-      if (/^-?\d+(?:\.\d+)?$/.test(trimmed)) {
-        return -current === Math.abs(current) ? `-${trimmed}` : trimmed.replace(/^-/, '')
-      }
-      const parts = trimmed.split(/[\s+\-×÷%]/)
-      const lastNum = parts.pop()
-      if (lastNum && /^-?\d+(?:\.\d+)?$/.test(lastNum)) {
-        const newLast = -current === Math.abs(current) ? `-${lastNum}` : lastNum.replace(/^-/, '')
-        parts.push(newLast)
-        return parts.join(' ')
-      }
-      return prev
-    })
   }
 
   const handleDecimal = () => {
@@ -85,10 +65,21 @@ const Calculator = ({
     }
   }
 
-  const handleOperator = (op: string) => {
+  const handleOperator = (op: Operator) => {
     const current = parseFloat(display)
 
     if (isNaN(current)) return
+
+    if (op === '%') {
+      // Percentage: convert current value to percentage (divide by 100)
+      const percentValue = current / 100
+      setDisplay(String(percentValue))
+      setPreviousValue(current)
+      setOperator('%' as Operator)
+      setWaitingForOperand(true)
+      setExpression(prev => prev === '0' ? String(percentValue) : prev + ' %')
+      return
+    }
 
     if (operator !== null && previousValue !== null && !waitingForOperand) {
       let result: number
@@ -103,7 +94,6 @@ const Calculator = ({
           }
           result = previousValue / current
           break
-        case '%': result = previousValue % current; break
         default: return
       }
 
@@ -117,7 +107,7 @@ const Calculator = ({
       }
     } else {
       setPreviousValue(current)
-      setOperator(op as Operator)
+      setOperator(op)
       setWaitingForOperand(true)
       if (expression === '0') {
         setExpression(String(current) + ' ')
@@ -164,6 +154,100 @@ const Calculator = ({
     setOperator(null)
     setWaitingForOperand(true)
     setExpression(String(roundedResult))
+    setAnsValue(String(roundedResult))
+  }
+
+  const handleScientific = (op: Operator) => {
+    // For unary scientific functions, apply immediately to display
+    const current = parseFloat(display)
+
+    if (isNaN(current)) return
+
+    let result: number
+
+    switch (op) {
+      case 'sin': {
+        const radians = mode === 'DEG' ? (current * Math.PI) / 180 : current
+        result = Math.sin(radians)
+        break
+      }
+      case 'cos': {
+        const radians = mode === 'DEG' ? (current * Math.PI) / 180 : current
+        result = Math.cos(radians)
+        break
+      }
+      case 'tan': {
+        const radians = mode === 'DEG' ? (current * Math.PI) / 180 : current
+        result = Math.tan(radians)
+        break
+      }
+      case 'ln':
+        if (current <= 0) return
+        result = Math.log(current)
+        break
+      case 'log':
+        if (current <= 0) return
+        result = Math.log10(current)
+        break
+      case '√':
+        if (current < 0) return
+        result = Math.sqrt(current)
+        break
+      case 'x!':
+        if (!Number.isInteger(current) || current < 0) return
+        let fact = 1
+        for (let i = 2; i <= current; i++) fact *= i
+        result = fact
+        break
+      case 'xʸ':
+        if (previousValue === null) return
+        result = Math.pow(previousValue, current)
+        break
+      case 'π':
+        result = Math.PI
+        break
+      case 'e':
+        result = Math.E
+        break
+      case 'Ans':
+        if (ansValue === null || ansValue === '0' || ansValue === 'Error') return
+        result = parseFloat(ansValue)
+        break
+      case 'Inv':
+        if (current === 0) return
+        result = 1 / current
+        break
+      case 'EXP':
+        result = Math.exp(current)
+        break
+      case '(':
+      case ')':
+        return
+      default:
+        return
+    }
+
+    if (!isFinite(result)) {
+      setDisplay('Error')
+      return
+    }
+
+    const roundedResult = Math.round(result * 1000000) / 1000000
+
+    setDisplay(String(roundedResult))
+    setPreviousValue(roundedResult as number)
+    setWaitingForOperand(true)
+    // Update expression to show the function was applied
+    if (['sin', 'cos', 'tan', 'ln', 'log', '√', 'x!'].includes(op)) {
+      setExpression(_prev => String(roundedResult))
+    }
+  }
+
+  const handleToggleMode = () => {
+    setMode(prev => {
+      const newMode = prev === 'DEG' ? 'RAD' : 'DEG'
+      return newMode
+    })
   }
 
   return (
@@ -171,55 +255,71 @@ const Calculator = ({
       <CalculatorDisplay display={display} expression={expression} />
 
       <div className="calculator-buttons">
-        <button
-          className="calculator-history-btn w-full h-14 text-[--text]/60 mb-2 rounded-lg flex items-center justify-center"
-          onClick={() => alert('History')}
-          aria-label="View calculation history"
-        >
-          History
-        </button>
-
-        <div className="grid grid-cols-4 gap-2 mb-2">
-          <CalculatorButton variant="function" label="AC" onClick={handleClear} />
+        {/* Top controls row: Deg Rad, x!, (, ), %, AC */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
           <CalculatorButton
             variant="function"
-            label="+/-"
-            onClick={handlePlusMinus}
+            label="Deg"
+            onClick={handleToggleMode}
+            className={mode === 'DEG' ? 'active' : ''}
+            aria-label="Toggle DEG mode"
           />
-          <CalculatorButton variant="operator" label="%" onClick={() => handleOperator('%')} />
-          <CalculatorButton variant="operator" label="÷" onClick={() => handleOperator('÷')} />
+          <CalculatorButton
+            variant="function"
+            label="Rad"
+            onClick={handleToggleMode}
+            className={mode === 'RAD' ? 'active' : ''}
+            aria-label="Toggle RAD mode"
+          />
+          <CalculatorButton variant="function" label="x!" onClick={() => handleScientific('x!')} />
+          <CalculatorButton variant="function" label="(" onClick={() => handleScientific('(')} />
+          <CalculatorButton variant="function" label=")" onClick={() => handleScientific(')')} />
+          <CalculatorButton variant="function" label="%" onClick={() => handleOperator('%')} />
+          <CalculatorButton variant="function" label="AC" onClick={handleClear} />
         </div>
 
-        <div className="grid grid-cols-4 gap-2 mb-2">
+        {/* Row 2: Inv, sin, ln, 7, 8, 9, ÷ */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          <CalculatorButton variant="function" label="Inv" onClick={() => handleScientific('Inv')} />
+          <CalculatorButton variant="function" label="sin" onClick={() => handleScientific('sin')} />
+          <CalculatorButton variant="function" label="ln" onClick={() => handleScientific('ln')} />
           <CalculatorButton variant="number" label="7" onClick={() => handleNumber('7')} />
           <CalculatorButton variant="number" label="8" onClick={() => handleNumber('8')} />
           <CalculatorButton variant="number" label="9" onClick={() => handleNumber('9')} />
-          <CalculatorButton variant="operator" label="×" onClick={() => handleOperator('×')} />
+          <CalculatorButton variant="operator" label="÷" onClick={() => handleOperator('÷')} />
         </div>
 
-        <div className="grid grid-cols-4 gap-2 mb-2">
+        {/* Row 3: π, cos, log, 4, 5, 6, × */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          <CalculatorButton variant="function" label="π" onClick={() => handleScientific('π')} />
+          <CalculatorButton variant="function" label="cos" onClick={() => handleScientific('cos')} />
+          <CalculatorButton variant="function" label="log" onClick={() => handleScientific('log')} />
           <CalculatorButton variant="number" label="4" onClick={() => handleNumber('4')} />
           <CalculatorButton variant="number" label="5" onClick={() => handleNumber('5')} />
           <CalculatorButton variant="number" label="6" onClick={() => handleNumber('6')} />
-          <CalculatorButton variant="operator" label="−" onClick={() => handleOperator('-')} />
+          <CalculatorButton variant="operator" label="×" onClick={() => handleOperator('×')} />
         </div>
 
-        <div className="grid grid-cols-4 gap-2 mb-2">
+        {/* Row 4: e, tan, √, 1, 2, 3, − */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          <CalculatorButton variant="function" label="e" onClick={() => handleScientific('e')} />
+          <CalculatorButton variant="function" label="tan" onClick={() => handleScientific('tan')} />
+          <CalculatorButton variant="function" label="√" onClick={() => handleScientific('√')} />
           <CalculatorButton variant="number" label="1" onClick={() => handleNumber('1')} />
           <CalculatorButton variant="number" label="2" onClick={() => handleNumber('2')} />
           <CalculatorButton variant="number" label="3" onClick={() => handleNumber('3')} />
-          <CalculatorButton variant="operator" label="+" onClick={() => handleOperator('+')} />
+          <CalculatorButton variant="operator" label="−" onClick={() => handleOperator('-')} />
         </div>
 
-        <div className="grid grid-cols-2 gap-2 mb-2">
-          <CalculatorButton
-            variant="number"
-            label="0"
-            onClick={() => handleNumber('0')}
-            span={2}
-          />
+        {/* Row 5: Ans, EXP, xʸ, 0, ., =, + */}
+        <div className="grid grid-cols-7 gap-1 mb-2">
+          <CalculatorButton variant="function" label="Ans" onClick={() => handleScientific('Ans')} />
+          <CalculatorButton variant="function" label="EXP" onClick={() => handleScientific('EXP')} />
+          <CalculatorButton variant="function" label="xʸ" onClick={() => handleScientific('xʸ')} />
+          <CalculatorButton variant="number" label="0" onClick={() => handleNumber('0')} />
           <CalculatorButton variant="operator" label="." onClick={handleDecimal} />
           <CalculatorButton variant="equals" label="=" onClick={handleEquals} />
+          <CalculatorButton variant="operator" label="+" onClick={() => handleOperator('+')} />
         </div>
       </div>
     </div>

@@ -1,4 +1,24 @@
-export type Operator = '+' | '-' | '×' | '÷' | '%'
+export type Operator =
+  | '+'
+  | '-'
+  | '×'
+  | '÷'
+  | '%'
+  | 'sin'
+  | 'cos'
+  | 'tan'
+  | 'ln'
+  | 'log'
+  | '√'
+  | 'x!'
+  | 'xʸ'
+  | 'π'
+  | 'e'
+  | '('
+  | ')'
+  | 'Ans'
+  | 'EXP'
+  | 'Inv'
 
 export interface CalculationRecord {
   id: string
@@ -13,3 +33,5 @@ export interface CalculatorHistory {
   clearRecords: () => void
   deleteLastRecord: () => void
 }
+
+export type CalculatorMode = 'DEG' | 'RAD'

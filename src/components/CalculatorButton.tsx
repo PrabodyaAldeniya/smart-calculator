@@ -17,13 +17,18 @@ export const CalculatorButton = ({
   className,
   span,
 }: ButtonProps) => {
-  const baseStyles = 'calculator-button flex items-center justify-center rounded-lg font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2'
+  const baseStyles =
+    'calculator-button rounded-full h-14 min-w-[48px] flex items-center justify-center text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)]'
 
   const variantStyles = {
-    number: 'bg-white dark:bg-[--bg] text-[--text] hover:bg-gray-100 dark:hover:bg-[--text-h]',
-    operator: 'bg-[--accent] text-white hover:bg-[#c855ff] dark:hover:bg-[#d0a0ff]',
-    function: 'bg-[--border] text-[--text] hover:bg-gray-100 dark:hover:bg-[--code-bg]',
-    equals: 'bg-[--accent] text-white hover:bg-[#c855ff] dark:hover:bg-[#d0a0ff]',
+    number:
+      'bg-[var(--bg)] text-[var(--text)] hover:bg-[var(--code-bg)] dark:hover:bg-[--bg]',
+    operator:
+      'bg-[var(--accent)] text-white hover:bg-[#c855ff] dark:hover:bg-[#d0a0ff]',
+    function:
+      'bg-[var(--border)] text-[var(--text)] hover:bg-[var(--code-bg)] dark:hover:bg-[--code-bg]',
+    equals:
+      'bg-[var(--accent)] text-white hover:bg-[#c855ff] dark:hover:bg-[#d0a0ff]',
   }
 
   const isDisabled = disabled === true
