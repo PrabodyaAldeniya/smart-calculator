@@ -270,7 +270,7 @@ const Calculator = ({
 
       {/* History button at top-left of display area */}
       {historyOpen && (
-        <div className="history-overlay" onClick={toggleHistory}>
+        <div className="history-overlay open" onClick={toggleHistory}>
           <div className="history-overlay-content" onClick={e => e.stopPropagation()}>
             <button
               className="history-close-btn"
