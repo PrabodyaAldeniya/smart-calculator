@@ -59,6 +59,25 @@ const Calculator = ({
     setExpression('0')
   }
 
+  const handleBackspace = () => {
+    if (display === 'Error') {
+      setDisplay('0')
+      setExpression('0')
+      return
+    }
+
+    setDisplay(prev => {
+      if (prev.length <= 1) return '0'
+      return prev.slice(0, -1)
+    })
+
+    setExpression(prev => {
+      if (prev === '0' || prev === '') return '0'
+      if (prev.length <= 1) return '0'
+      return prev.slice(0, -1)
+    })
+  }
+
   const handleDecimal = () => {
     if (!display.includes('.')) {
       if (waitingForOperand) {
@@ -298,7 +317,7 @@ const Calculator = ({
   }
 
   return (
-    <div className="calculator-container">
+    <div className="calculator-container" onKeyDown={(e) => e.key === 'Backspace' && handleBackspace()}>
       <CalculatorDisplay
         display={display}
         expression={expression}
@@ -361,6 +380,7 @@ const Calculator = ({
         <CalculatorButton variant="function" label=")" onClick={() => handleScientific(')')} />
         <CalculatorButton variant="function" label="%" onClick={() => handleOperator('%')} />
         <CalculatorButton variant="ac" label="AC" onClick={handleClear} />
+        <CalculatorButton variant="function" label="DEL" onClick={handleBackspace} />
 
         <CalculatorButton
           variant="function"
