@@ -18,7 +18,7 @@ export const CalculatorButton = ({
   span,
 }: ButtonProps) => {
   const baseStyles =
-    'calculator-button rounded-full h-14 min-w-[48px] flex items-center justify-center text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)]'
+    'calculator-button rounded-md h-14 flex items-center justify-center text-sm font-medium transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-[var(--accent)]'
 
   const variantStyles = {
     number:
