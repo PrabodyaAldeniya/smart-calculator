@@ -1,30 +1,43 @@
 import { useState } from 'react'
 import Calculator from './components/Calculator'
-import { CalculationHistory } from './components/CalculationHistory'
 import type { CalculationRecord } from './types/calculator'
 
 function App() {
   const [history, setHistory] = useState<CalculationRecord[]>([])
+  const [historyOpen, setHistoryOpen] = useState<boolean>(false)
 
-  const onClear = () => {
+  const onAddToHistory = (expression: string, result: string) => {
+    setHistory(prev => {
+      const newRecord: CalculationRecord = {
+        id: Date.now().toString(),
+        expression,
+        result,
+        timestamp: Date.now(),
+      }
+      if (prev.length > 0 && prev[0].expression === expression && prev[0].result === result) {
+        return prev
+      }
+      return [newRecord, ...prev]
+    })
+  }
+
+  const clearHistory = () => {
     setHistory([])
   }
 
-  const onAddToHistory = (expression: string, result: string) => {
-    setHistory(prev => [{ id: Date.now().toString(), expression, result, timestamp: Date.now() }, ...prev])
+  const toggleHistory = () => {
+    setHistoryOpen(prev => !prev)
   }
 
   return (
     <div className="main-page">
       <Calculator
         initialDisplay="0"
-        onClear={onClear}
         onAddToHistory={onAddToHistory}
-      />
-      <CalculationHistory
-        records={history}
-        onClear={onClear}
-        onDeleteLast={() => {}}
+        toggleHistory={toggleHistory}
+        clearHistory={clearHistory}
+        historyOpen={historyOpen}
+        history={history}
       />
     </div>
   )

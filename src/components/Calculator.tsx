@@ -1,18 +1,24 @@
 import { useState } from 'react'
 import { CalculatorDisplay } from './CalculatorDisplay'
 import { CalculatorButton } from './CalculatorButton'
-import type { Operator, CalculatorMode } from '../types/calculator'
+import type { Operator, CalculatorMode, CalculationRecord } from '../types/calculator'
 
 type CalculatorProps = {
   initialDisplay?: string
-  onClear: () => void
   onAddToHistory: (expression: string, result: string) => void
+  toggleHistory: () => void
+  clearHistory: () => void
+  historyOpen: boolean
+  history: CalculationRecord[]
 }
 
 const Calculator = ({
   initialDisplay,
-  onClear,
   onAddToHistory,
+  toggleHistory,
+  clearHistory,
+  historyOpen,
+  history,
 }: CalculatorProps) => {
   const [display, setDisplay] = useState<string>(initialDisplay ?? '0')
   const [previousValue, setPreviousValue] = useState<number | null>(null)
@@ -49,8 +55,8 @@ const Calculator = ({
     setOperator(null)
     setWaitingForOperand(false)
     setExpression('0')
-    setAnsValue(null)
-    onClear()
+    // DO NOT clear ansValue - preserve the most recent successful answer
+    // DO NOT call onClear() - history clearing is separate (Clear History button)
   }
 
   const handleDecimal = () => {
@@ -217,8 +223,10 @@ const Calculator = ({
         break
       case 'Ans':
         if (ansValue === null || ansValue === '0' || ansValue === 'Error') return
-        result = parseFloat(ansValue)
-        break
+        setDisplay(String(parseFloat(ansValue)))
+        setExpression(ansValue)
+        setWaitingForOperand(true)
+        return
       case 'Inv':
         if (current === 0) return
         result = 1 / current
@@ -260,8 +268,46 @@ const Calculator = ({
     <div className="calculator-container">
       <CalculatorDisplay display={display} expression={expression} />
 
+      {/* History button at top-left of display area */}
+      {historyOpen && (
+        <div className="history-overlay" onClick={toggleHistory}>
+          <div className="history-overlay-content" onClick={e => e.stopPropagation()}>
+            <button
+              className="history-close-btn"
+              onClick={toggleHistory}
+              aria-label="Close history"
+            >
+              ✕
+            </button>
+            <h3>Calculation History</h3>
+            {history.length === 0 ? (
+              <p>No calculations yet</p>
+            ) : (
+              <div className="history-list">
+                {history.map((record, _index) => (
+                  <div
+                    key={record.id}
+                    className="history-item flex justify-between items-center px-3 py-2 text-sm"
+                  >
+                    <span className="flex-1 truncate">{record.expression}</span>
+                    <span className="text-[--accent] font-medium">{record.result}</span>
+                  </div>
+                ))}
+              </div>
+            )}
+            <button
+              className="history-clear"
+              onClick={clearHistory}
+              aria-label="Clear calculation history"
+            >
+              Clear All
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="calculator-buttons">
-        {/* Top controls row: Deg Rad, x!, (, ), %, AC */}
+        {/* Top controls row: Deg Rad, x!, (, ), %, AC, History */}
         <div className="grid grid-cols-7 gap-1 mb-2">
           <CalculatorButton
             variant="function"
@@ -282,6 +328,12 @@ const Calculator = ({
           <CalculatorButton variant="function" label=")" onClick={() => handleScientific(')')} />
           <CalculatorButton variant="function" label="%" onClick={() => handleOperator('%')} />
           <CalculatorButton variant="function" label="AC" onClick={handleClear} />
+          <CalculatorButton
+            variant="function"
+            label="History"
+            onClick={toggleHistory}
+            aria-label="Toggle calculation history"
+          />
         </div>
 
         {/* Row 2: Inv, sin, ln, 7, 8, 9, ÷ */}
