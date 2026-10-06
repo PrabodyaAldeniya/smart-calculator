@@ -130,7 +130,7 @@
 
 .calculator-buttons {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(8, 1fr);
   grid-template-rows: repeat(5, auto);
   gap: 0.75rem;
   margin: 0;
@@ -148,7 +148,7 @@
   .calculator-buttons {
     gap: 0.5rem;
     padding: 0.625rem 0.75rem 0;
-    grid-template-columns: repeat(6, 1fr);
+    grid-template-columns: repeat(7, 1fr);
   }
 }
 
@@ -156,7 +156,7 @@
   .calculator-buttons {
     gap: 0.4rem;
     padding: 0.5rem 0.5rem 0;
-    grid-template-columns: repeat(5, 1fr);
+    grid-template-columns: repeat(6, 1fr);
   }
 }
 
@@ -164,14 +164,14 @@
   background: var(--bg);
   color: var(--text);
   border: 1px solid var(--border);
-  border-radius: 10px;
-  height: 48px;
+  border-radius: 12px;
+  height: 52px;
   padding: 0 0.6rem;
-  font-size: 0.85rem;
+  font-size: 16px;
   font-family: var(--sans);
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.15s ease;
+  transition: background-color 150ms ease, transform 150ms ease, box-shadow 150ms ease, border-color 150ms ease;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -181,10 +181,12 @@
   background: var(--accent-bg);
   border-color: var(--accent-border);
   transform: translateY(-1px);
+  box-shadow: var(--shadow), inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .calculator-button:active:not(:disabled) {
-  transform: translateY(1px) scale(0.98);
+  transform: translateY(2px);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3), 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
 .calculator-button:focus-visible:not(:disabled) {
