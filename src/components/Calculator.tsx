@@ -8,18 +8,18 @@ type CalculatorProps = {
   initialDisplay?: string
   onAddToHistory: (expression: string, result: string) => void
   toggleHistory: () => void
-  clearHistory: () => void
   historyOpen: boolean
   history: CalculationRecord[]
+  clearHistory: () => void
 }
 
 const Calculator = ({
   initialDisplay,
   onAddToHistory,
   toggleHistory,
-  clearHistory,
   historyOpen,
   history,
+  clearHistory,
 }: CalculatorProps) => {
   const [display, setDisplay] = useState<string>(initialDisplay ?? '0')
   const [previousValue, setPreviousValue] = useState<number | null>(null)
@@ -57,8 +57,6 @@ const Calculator = ({
     setOperator(null)
     setWaitingForOperand(false)
     setExpression('0')
-    // DO NOT clear ansValue - preserve the most recent successful answer
-    // DO NOT call onClear() - history clearing is separate (Clear History button)
   }
 
   const handleDecimal = () => {
@@ -80,7 +78,6 @@ const Calculator = ({
     if (isNaN(current)) return
 
     if (op === '%') {
-      // Percentage: convert current value to percentage (divide by 100)
       const percentValue = current / 100
       setDisplay(String(percentValue))
       setPreviousValue(current)
@@ -154,17 +151,13 @@ const Calculator = ({
     if (!isFinite(result)) {
       setDisplay('Error')
     } else {
-      // Build the expression string for history and small display
       const exprForSmall = `${previousValue ?? 0} ${operator} ${current}`
       const exprForHistory = `${exprForSmall} = ${roundedResult}`
       setDisplay(String(roundedResult))
       onAddToHistory(exprForHistory, String(roundedResult))
-      // Preserve the original expression for small display
       setExpression(exprForSmall)
     }
 
-    // For chained calculations: previousValue holds the result,
-    // so the next operator can use it as the first operand
     setPreviousValue(roundedResult as number)
     setOperator(null)
     setWaitingForOperand(true)
@@ -172,7 +165,6 @@ const Calculator = ({
   }
 
   const handleScientific = (op: Operator) => {
-    // For unary scientific functions, apply immediately to display
     const current = parseFloat(display)
 
     if (isNaN(current)) return
@@ -269,7 +261,6 @@ const Calculator = ({
 
     const roundedResult = Math.round(result * 1000000) / 1000000
 
-    // Build expression string for history display
     let opDisplay: string
     if (['sin', 'cos', 'tan'].includes(op)) {
       opDisplay = isInverse
@@ -302,11 +293,18 @@ const Calculator = ({
     })
   }
 
+  const handleToggleInverse = () => {
+    setIsInverse(prev => !prev)
+  }
+
   return (
     <div className="calculator-container">
-      <CalculatorDisplay display={display} expression={expression} />
+      <CalculatorDisplay
+        display={display}
+        expression={expression}
+        onHistoryToggle={toggleHistory}
+      />
 
-      {/* History button at top-left of display area */}
       {historyOpen && (
         <div className="history-overlay open" onClick={toggleHistory}>
           <div className="history-overlay-content" onClick={e => e.stopPropagation()}>
@@ -345,104 +343,72 @@ const Calculator = ({
       )}
 
       <div className="calculator-buttons">
-        {/* Top controls row: Deg Rad, x!, (, ), %, AC, History */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
-          <CalculatorButton
-            variant="function"
-            label="Deg"
-            onClick={handleToggleMode}
-            className={angleMode === 'deg' ? 'active' : ''}
-            aria-label="Toggle DEG mode"
-          />
-          <CalculatorButton
-            variant="function"
-            label="Rad"
-            onClick={handleToggleMode}
-            className={angleMode === 'rad' ? 'active' : ''}
-            aria-label="Toggle RAD mode"
-          />
-          <CalculatorButton variant="function" label="x!" onClick={() => handleScientific('x!')} />
-          <CalculatorButton variant="function" label="(" onClick={() => handleScientific('(')} />
-          <CalculatorButton variant="function" label=")" onClick={() => handleScientific(')')} />
-          <CalculatorButton variant="function" label="%" onClick={() => handleOperator('%')} />
-          <CalculatorButton variant="function" label="AC" onClick={handleClear} />
-          <CalculatorButton
-            variant="function"
-            label="History"
-            onClick={toggleHistory}
-            aria-label="Toggle calculation history"
-          />
-        </div>
+        <CalculatorButton
+          variant="mode-toggle"
+          label={angleMode === 'deg' ? 'DEG' : 'RAD'}
+          onClick={handleToggleMode}
+          className={angleMode === 'deg' ? 'active' : ''}
+          aria-label="Toggle DEG/RAD mode"
+        />
+        <CalculatorButton
+          variant="function"
+          label="INV"
+          onClick={handleToggleInverse}
+          aria-label="Toggle inverse mode"
+        />
+        <CalculatorButton variant="function" label="x!" onClick={() => handleScientific('x!')} />
+        <CalculatorButton variant="function" label="(" onClick={() => handleScientific('(')} />
+        <CalculatorButton variant="function" label=")" onClick={() => handleScientific(')')} />
+        <CalculatorButton variant="function" label="%" onClick={() => handleOperator('%')} />
+        <CalculatorButton variant="ac" label="AC" onClick={handleClear} />
 
-        {/* Row 2: Inv, sin, ln, 7, 8, 9, ÷ */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
-          <CalculatorButton
-            variant="function"
-            label="Inv"
-            onClick={() => setIsInverse((prev) => !prev)}
-            aria-label="Toggle inverse mode"
-          />
-          <CalculatorButton
-            variant="function"
-            label={isInverse ? 'sin⁻¹' : 'sin'}
-            onClick={() => handleScientific('sin')}
-            aria-label={isInverse ? 'Compute inverse sine' : 'Compute sine'}
-          />
-          <CalculatorButton
-            variant="function"
-            label={isInverse ? 'cos⁻¹' : 'cos'}
-            onClick={() => handleScientific('cos')}
-            aria-label={isInverse ? 'Compute inverse cosine' : 'Compute cosine'}
-          />
-          <CalculatorButton
-            variant="function"
-            label={isInverse ? 'tan⁻¹' : 'tan'}
-            onClick={() => handleScientific('tan')}
-            aria-label={isInverse ? 'Compute inverse tangent' : 'Compute tangent'}
-          />
-          <CalculatorButton
-            variant="function"
-            label="ln"
-            onClick={() => handleScientific('ln')}
-          />
-          <CalculatorButton variant="number" label="7" onClick={() => handleNumber('7')} />
-          <CalculatorButton variant="number" label="8" onClick={() => handleNumber('8')} />
-          <CalculatorButton variant="number" label="9" onClick={() => handleNumber('9')} />
-          <CalculatorButton variant="operator" label="÷" onClick={() => handleOperator('÷')} />
-        </div>
+        <CalculatorButton
+          variant="function"
+          label={isInverse ? 'sin⁻¹' : 'sin'}
+          onClick={() => handleScientific('sin')}
+          aria-label={isInverse ? 'Compute inverse sine' : 'Compute sine'}
+        />
+        <CalculatorButton
+          variant="function"
+          label={isInverse ? 'cos⁻¹' : 'cos'}
+          onClick={() => handleScientific('cos')}
+          aria-label={isInverse ? 'Compute inverse cosine' : 'Compute cosine'}
+        />
+        <CalculatorButton
+          variant="function"
+          label={isInverse ? 'tan⁻¹' : 'tan'}
+          onClick={() => handleScientific('tan')}
+          aria-label={isInverse ? 'Compute inverse tangent' : 'Compute tangent'}
+        />
+        <CalculatorButton variant="function" label="ln" onClick={() => handleScientific('ln')} />
+        <CalculatorButton variant="number" label="7" onClick={() => handleNumber('7')} />
+        <CalculatorButton variant="number" label="8" onClick={() => handleNumber('8')} />
+        <CalculatorButton variant="number" label="9" onClick={() => handleNumber('9')} />
+        <CalculatorButton variant="operator" label="÷" onClick={() => handleOperator('÷')} />
 
-        {/* Row 3: π, cos, log, 4, 5, 6, × */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
-          <CalculatorButton variant="function" label="π" onClick={() => handleScientific('π')} />
-          <CalculatorButton variant="function" label="cos" onClick={() => handleScientific('cos')} />
-          <CalculatorButton variant="function" label="log" onClick={() => handleScientific('log')} />
-          <CalculatorButton variant="number" label="4" onClick={() => handleNumber('4')} />
-          <CalculatorButton variant="number" label="5" onClick={() => handleNumber('5')} />
-          <CalculatorButton variant="number" label="6" onClick={() => handleNumber('6')} />
-          <CalculatorButton variant="operator" label="×" onClick={() => handleOperator('×')} />
-        </div>
+        <CalculatorButton variant="function" label="π" onClick={() => handleScientific('π')} />
+        <CalculatorButton variant="function" label="cos" onClick={() => handleScientific('cos')} />
+        <CalculatorButton variant="function" label="log" onClick={() => handleScientific('log')} />
+        <CalculatorButton variant="number" label="4" onClick={() => handleNumber('4')} />
+        <CalculatorButton variant="number" label="5" onClick={() => handleNumber('5')} />
+        <CalculatorButton variant="number" label="6" onClick={() => handleNumber('6')} />
+        <CalculatorButton variant="operator" label="×" onClick={() => handleOperator('×')} />
 
-        {/* Row 4: e, tan, √, 1, 2, 3, − */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
-          <CalculatorButton variant="function" label="e" onClick={() => handleScientific('e')} />
-          <CalculatorButton variant="function" label="tan" onClick={() => handleScientific('tan')} />
-          <CalculatorButton variant="function" label="√" onClick={() => handleScientific('√')} />
-          <CalculatorButton variant="number" label="1" onClick={() => handleNumber('1')} />
-          <CalculatorButton variant="number" label="2" onClick={() => handleNumber('2')} />
-          <CalculatorButton variant="number" label="3" onClick={() => handleNumber('3')} />
-          <CalculatorButton variant="operator" label="−" onClick={() => handleOperator('-')} />
-        </div>
+        <CalculatorButton variant="function" label="e" onClick={() => handleScientific('e')} />
+        <CalculatorButton variant="function" label="tan" onClick={() => handleScientific('tan')} />
+        <CalculatorButton variant="function" label="√" onClick={() => handleScientific('√')} />
+        <CalculatorButton variant="number" label="1" onClick={() => handleNumber('1')} />
+        <CalculatorButton variant="number" label="2" onClick={() => handleNumber('2')} />
+        <CalculatorButton variant="number" label="3" onClick={() => handleNumber('3')} />
+        <CalculatorButton variant="operator" label="−" onClick={() => handleOperator('-')} />
 
-        {/* Row 5: Ans, EXP, xʸ, 0, ., =, + */}
-        <div className="grid grid-cols-7 gap-1 mb-2">
-          <CalculatorButton variant="function" label="Ans" onClick={() => handleScientific('Ans')} />
-          <CalculatorButton variant="function" label="EXP" onClick={() => handleScientific('EXP')} />
-          <CalculatorButton variant="function" label="xʸ" onClick={() => handleScientific('xʸ')} />
-          <CalculatorButton variant="number" label="0" onClick={() => handleNumber('0')} />
-          <CalculatorButton variant="operator" label="." onClick={handleDecimal} />
-          <CalculatorButton variant="equals" label="=" onClick={handleEquals} />
-          <CalculatorButton variant="operator" label="+" onClick={() => handleOperator('+')} />
-        </div>
+        <CalculatorButton variant="function" label="Ans" onClick={() => handleScientific('Ans')} />
+        <CalculatorButton variant="function" label="EXP" onClick={() => handleScientific('EXP')} />
+        <CalculatorButton variant="history" label="Hist." onClick={toggleHistory} aria-label="Toggle calculation history" />
+        <CalculatorButton variant="number" label="0" onClick={() => handleNumber('0')} />
+        <CalculatorButton variant="operator" label="." onClick={handleDecimal} />
+        <CalculatorButton variant="equals" label="=" onClick={handleEquals} />
+        <CalculatorButton variant="operator" label="+" onClick={() => handleOperator('+')} />
       </div>
     </div>
   )

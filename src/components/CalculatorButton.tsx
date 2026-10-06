@@ -1,4 +1,4 @@
-type ButtonVariant = 'number' | 'operator' | 'function' | 'equals'
+type ButtonVariant = 'number' | 'operator' | 'function' | 'equals' | 'mode-toggle' | 'ac' | 'history'
 
 type ButtonProps = {
   variant: ButtonVariant
@@ -29,6 +29,12 @@ export const CalculatorButton = ({
       'bg-[var(--border)] text-[var(--text)] hover:bg-[var(--code-bg)] dark:hover:bg-[--code-bg]',
     equals:
       'bg-[var(--accent)] text-white hover:bg-[#c855ff] dark:hover:bg-[#d0a0ff]',
+    'mode-toggle':
+      'bg-[var(--border)] text-[var(--text)] hover:bg-[var(--accent-bg)] dark:hover:bg-[--accent-border]',
+    ac:
+      'bg-[var(--card-bg)] text-[var(--accent)] hover:bg-[var(--accent-bg)] dark:hover:bg-[--accent]/60',
+    history:
+      'transparent text-[var(--text-h)/60] hover:bg-[var(--accent-bg)] dark:hover:bg-[--accent]/20',
   }
 
   const isDisabled = disabled === true

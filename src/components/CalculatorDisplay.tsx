@@ -22,10 +22,9 @@ export const CalculatorDisplay = ({
         {display}
       </div>
       <button
-        className="calculator-button function history-display-btn"
+        className="calculator-button history-display-btn"
         onClick={onHistoryToggle}
         aria-label="Toggle calculation history"
-        style={{ flexShrink: 0 }}
       >
         📜
       </button>
