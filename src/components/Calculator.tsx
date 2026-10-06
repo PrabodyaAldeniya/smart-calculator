@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { CalculatorDisplay } from './CalculatorDisplay'
 import { CalculatorButton } from './CalculatorButton'
-import type { Operator, CalculatorMode, CalculationRecord } from '../types/calculator'
+import type { Operator, CalculationRecord, AngleMode } from '../types/calculator'
+import { toRadians, toDegrees } from '../utils/calculator'
 
 type CalculatorProps = {
   initialDisplay?: string
@@ -25,7 +26,8 @@ const Calculator = ({
   const [operator, setOperator] = useState<Operator | null>(null)
   const [waitingForOperand, setWaitingForOperand] = useState<boolean>(false)
   const [expression, setExpression] = useState<string>('0')
-  const [mode, setMode] = useState<CalculatorMode>('DEG')
+  const [angleMode, setAngleMode] = useState<AngleMode>('deg')
+  const [isInverse, setIsInverse] = useState<boolean>(false)
   const [ansValue, setAnsValue] = useState<string | null>(null)
 
   const handleNumber = (digit: string) => {
@@ -177,20 +179,39 @@ const Calculator = ({
 
     let result: number
 
+    const isTrigInverse = isInverse && ['sin', 'cos', 'tan'].includes(op)
+
     switch (op) {
       case 'sin': {
-        const radians = mode === 'DEG' ? (current * Math.PI) / 180 : current
-        result = Math.sin(radians)
+        if (isTrigInverse) {
+          if (current < -1 || current > 1) return
+          result = Math.asin(current)
+          if (angleMode === 'deg') result = toDegrees(result)
+        } else {
+          const radians = angleMode === 'deg' ? toRadians(current) : current
+          result = Math.sin(radians)
+        }
         break
       }
       case 'cos': {
-        const radians = mode === 'DEG' ? (current * Math.PI) / 180 : current
-        result = Math.cos(radians)
+        if (isTrigInverse) {
+          if (current < -1 || current > 1) return
+          result = Math.acos(current)
+          if (angleMode === 'deg') result = toDegrees(result)
+        } else {
+          const radians = angleMode === 'deg' ? toRadians(current) : current
+          result = Math.cos(radians)
+        }
         break
       }
       case 'tan': {
-        const radians = mode === 'DEG' ? (current * Math.PI) / 180 : current
-        result = Math.tan(radians)
+        if (isTrigInverse) {
+          result = Math.atan(current)
+          if (angleMode === 'deg') result = toDegrees(result)
+        } else {
+          const radians = angleMode === 'deg' ? toRadians(current) : current
+          result = Math.tan(radians)
+        }
         break
       }
       case 'ln':
@@ -248,18 +269,35 @@ const Calculator = ({
 
     const roundedResult = Math.round(result * 1000000) / 1000000
 
+    // Build expression string for history display
+    let opDisplay: string
+    if (['sin', 'cos', 'tan'].includes(op)) {
+      opDisplay = isInverse
+        ? op === 'sin'
+          ? 'sin⁻¹'
+          : op === 'cos'
+          ? 'cos⁻¹'
+          : 'tan⁻¹'
+        : op
+    } else {
+      opDisplay = op
+    }
+
+    const exprInput = current.toString()
+    const expr = `${opDisplay}(${exprInput})`
+    const resultStr = String(roundedResult)
+
     setDisplay(String(roundedResult))
     setPreviousValue(roundedResult as number)
     setWaitingForOperand(true)
-    // Update expression to show the function was applied
-    if (['sin', 'cos', 'tan', 'ln', 'log', '√', 'x!'].includes(op)) {
-      setExpression(_prev => String(roundedResult))
-    }
+    setExpression(_prev => String(roundedResult))
+    setAnsValue(String(roundedResult))
+    onAddToHistory(expr, resultStr)
   }
 
   const handleToggleMode = () => {
-    setMode(prev => {
-      const newMode = prev === 'DEG' ? 'RAD' : 'DEG'
+    setAngleMode(prev => {
+      const newMode = prev === 'deg' ? 'rad' : 'deg'
       return newMode
     })
   }
@@ -313,14 +351,14 @@ const Calculator = ({
             variant="function"
             label="Deg"
             onClick={handleToggleMode}
-            className={mode === 'DEG' ? 'active' : ''}
+            className={angleMode === 'deg' ? 'active' : ''}
             aria-label="Toggle DEG mode"
           />
           <CalculatorButton
             variant="function"
             label="Rad"
             onClick={handleToggleMode}
-            className={mode === 'RAD' ? 'active' : ''}
+            className={angleMode === 'rad' ? 'active' : ''}
             aria-label="Toggle RAD mode"
           />
           <CalculatorButton variant="function" label="x!" onClick={() => handleScientific('x!')} />
@@ -338,9 +376,35 @@ const Calculator = ({
 
         {/* Row 2: Inv, sin, ln, 7, 8, 9, ÷ */}
         <div className="grid grid-cols-7 gap-1 mb-2">
-          <CalculatorButton variant="function" label="Inv" onClick={() => handleScientific('Inv')} />
-          <CalculatorButton variant="function" label="sin" onClick={() => handleScientific('sin')} />
-          <CalculatorButton variant="function" label="ln" onClick={() => handleScientific('ln')} />
+          <CalculatorButton
+            variant="function"
+            label="Inv"
+            onClick={() => setIsInverse((prev) => !prev)}
+            aria-label="Toggle inverse mode"
+          />
+          <CalculatorButton
+            variant="function"
+            label={isInverse ? 'sin⁻¹' : 'sin'}
+            onClick={() => handleScientific('sin')}
+            aria-label={isInverse ? 'Compute inverse sine' : 'Compute sine'}
+          />
+          <CalculatorButton
+            variant="function"
+            label={isInverse ? 'cos⁻¹' : 'cos'}
+            onClick={() => handleScientific('cos')}
+            aria-label={isInverse ? 'Compute inverse cosine' : 'Compute cosine'}
+          />
+          <CalculatorButton
+            variant="function"
+            label={isInverse ? 'tan⁻¹' : 'tan'}
+            onClick={() => handleScientific('tan')}
+            aria-label={isInverse ? 'Compute inverse tangent' : 'Compute tangent'}
+          />
+          <CalculatorButton
+            variant="function"
+            label="ln"
+            onClick={() => handleScientific('ln')}
+          />
           <CalculatorButton variant="number" label="7" onClick={() => handleNumber('7')} />
           <CalculatorButton variant="number" label="8" onClick={() => handleNumber('8')} />
           <CalculatorButton variant="number" label="9" onClick={() => handleNumber('9')} />

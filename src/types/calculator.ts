@@ -7,6 +7,9 @@ export type Operator =
   | 'sin'
   | 'cos'
   | 'tan'
+  | 'asin'
+  | 'acos'
+  | 'atan'
   | 'ln'
   | 'log'
   | '√'
@@ -19,6 +22,8 @@ export type Operator =
   | 'Ans'
   | 'EXP'
   | 'Inv'
+
+export type AngleMode = 'deg' | 'rad'
 
 export interface CalculationRecord {
   id: string
@@ -33,5 +38,3 @@ export interface CalculatorHistory {
   clearRecords: () => void
   deleteLastRecord: () => void
 }
-
-export type CalculatorMode = 'DEG' | 'RAD'
