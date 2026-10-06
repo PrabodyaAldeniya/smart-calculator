@@ -1,0 +1,2 @@
+$body = @{description = "Smart Calculator - A scientific calculator built with React, TypeScript, and Vite."}
+Invoke-RestMethod -Method Patch -Uri "https://api.github.com/repos/PrabodyaAldeniya/smart-calculator" -Body $body -ContentType "application/json" -Headers @{Authorization = "token $env:GH_TOKEN"}
