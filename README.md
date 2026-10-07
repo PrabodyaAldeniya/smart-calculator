@@ -3,7 +3,7 @@
 A modern, responsive, and user-friendly scientific calculator built with **React, TypeScript, and Vite**.
 
 Smart Calculator provides standard arithmetic operations together with useful scientific functions, calculation history, answer reuse, keyboard support, and responsive design for desktop and mobile devices.
-<img width="400" height="400" alt="image" src="https://github.com/user-attachments/assets/f565edba-208d-4903-a651-1890a5fb6454" />
+<img width="400" height="300" alt="image" src="https://github.com/user-attachments/assets/f565edba-208d-4903-a651-1890a5fb6454" />
 
 
 ---
