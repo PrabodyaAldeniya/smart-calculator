@@ -130,8 +130,8 @@
 
 .calculator-buttons {
   display: grid;
-  grid-template-columns: repeat(8, 1fr);
-  grid-template-rows: repeat(5, auto);
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-rows: repeat(9, auto);
   gap: 0.75rem;
   margin: 0;
   padding: 0.5rem 1rem 0;

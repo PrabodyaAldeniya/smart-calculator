@@ -362,6 +362,7 @@ const Calculator = ({
       )}
 
       <div className="calculator-buttons">
+        {/* Mode controls row: DEG|RAD, INV, (, ), x! */}
         <CalculatorButton
           variant="mode-toggle"
           label={angleMode === 'deg' ? 'DEG' : 'RAD'}
@@ -378,10 +379,8 @@ const Calculator = ({
         <CalculatorButton variant="function" label="x!" onClick={() => handleScientific('x!')} />
         <CalculatorButton variant="function" label="(" onClick={() => handleScientific('(')} />
         <CalculatorButton variant="function" label=")" onClick={() => handleScientific(')')} />
-        <CalculatorButton variant="function" label="%" onClick={() => handleOperator('%')} />
-        <CalculatorButton variant="ac" label="AC" onClick={handleClear} />
-        <CalculatorButton variant="function" label="DEL" onClick={handleBackspace} />
 
+        {/* Scientific functions Row 1: sin, cos, tan, ln */}
         <CalculatorButton
           variant="function"
           label={isInverse ? 'sin⁻¹' : 'sin'}
@@ -401,34 +400,48 @@ const Calculator = ({
           aria-label={isInverse ? 'Compute inverse tangent' : 'Compute tangent'}
         />
         <CalculatorButton variant="function" label="ln" onClick={() => handleScientific('ln')} />
+
+        {/* Scientific functions Row 2: log, √, π, e */}
+        <CalculatorButton variant="function" label="log" onClick={() => handleScientific('log')} />
+        <CalculatorButton variant="function" label="√" onClick={() => handleScientific('√')} />
+        <CalculatorButton variant="function" label="π" onClick={() => handleScientific('π')} />
+        <CalculatorButton variant="function" label="e" onClick={() => handleScientific('e')} />
+
+        {/* Scientific functions Row 3: xʸ, EXP, Ans, Hist. */}
+        <CalculatorButton variant="function" label="xʸ" onClick={() => handleScientific('xʸ')} />
+        <CalculatorButton variant="function" label="EXP" onClick={() => handleScientific('EXP')} />
+        <CalculatorButton variant="function" label="Ans" onClick={() => handleScientific('Ans')} />
+        <CalculatorButton variant="history" label="Hist." onClick={toggleHistory} aria-label="Toggle calculation history" />
+
+        {/* Standard calculator keypad Row 1: AC, DEL, %, ÷ */}
+        <CalculatorButton variant="ac" label="AC" onClick={handleClear} />
+        <CalculatorButton variant="function" label="DEL" onClick={handleBackspace} />
+        <CalculatorButton variant="function" label="%" onClick={() => handleOperator('%')} />
+        <CalculatorButton variant="operator" label="÷" onClick={() => handleOperator('÷')} />
+
+        {/* Standard calculator keypad Row 2: 7, 8, 9, × */}
         <CalculatorButton variant="number" label="7" onClick={() => handleNumber('7')} />
         <CalculatorButton variant="number" label="8" onClick={() => handleNumber('8')} />
         <CalculatorButton variant="number" label="9" onClick={() => handleNumber('9')} />
-        <CalculatorButton variant="operator" label="÷" onClick={() => handleOperator('÷')} />
+        <CalculatorButton variant="operator" label="×" onClick={() => handleOperator('×')} />
 
-        <CalculatorButton variant="function" label="π" onClick={() => handleScientific('π')} />
-        <CalculatorButton variant="function" label="cos" onClick={() => handleScientific('cos')} />
-        <CalculatorButton variant="function" label="log" onClick={() => handleScientific('log')} />
+        {/* Standard calculator keypad Row 3: 4, 5, 6, − */}
         <CalculatorButton variant="number" label="4" onClick={() => handleNumber('4')} />
         <CalculatorButton variant="number" label="5" onClick={() => handleNumber('5')} />
         <CalculatorButton variant="number" label="6" onClick={() => handleNumber('6')} />
-        <CalculatorButton variant="operator" label="×" onClick={() => handleOperator('×')} />
+        <CalculatorButton variant="operator" label="−" onClick={() => handleOperator('-')} />
 
-        <CalculatorButton variant="function" label="e" onClick={() => handleScientific('e')} />
-        <CalculatorButton variant="function" label="tan" onClick={() => handleScientific('tan')} />
-        <CalculatorButton variant="function" label="√" onClick={() => handleScientific('√')} />
+        {/* Standard calculator keypad Row 4: 1, 2, 3, + */}
         <CalculatorButton variant="number" label="1" onClick={() => handleNumber('1')} />
         <CalculatorButton variant="number" label="2" onClick={() => handleNumber('2')} />
         <CalculatorButton variant="number" label="3" onClick={() => handleNumber('3')} />
-        <CalculatorButton variant="operator" label="−" onClick={() => handleOperator('-')} />
-
-        <CalculatorButton variant="function" label="Ans" onClick={() => handleScientific('Ans')} />
-        <CalculatorButton variant="function" label="EXP" onClick={() => handleScientific('EXP')} />
-        <CalculatorButton variant="history" label="Hist." onClick={toggleHistory} aria-label="Toggle calculation history" />
-        <CalculatorButton variant="number" label="0" onClick={() => handleNumber('0')} />
-        <CalculatorButton variant="operator" label="." onClick={handleDecimal} />
-        <CalculatorButton variant="equals" label="=" onClick={handleEquals} />
         <CalculatorButton variant="operator" label="+" onClick={() => handleOperator('+')} />
+
+        {/* Standard calculator keypad Row 5: Ans, 0, ., = */}
+        <CalculatorButton variant="function" label="Ans" onClick={() => handleScientific('Ans')} />
+        <CalculatorButton variant="number" label="0" onClick={() => handleNumber('0')} />
+        <CalculatorButton variant="number" label="." onClick={handleDecimal} />
+        <CalculatorButton variant="equals" label="=" onClick={handleEquals} />
       </div>
     </div>
   )
