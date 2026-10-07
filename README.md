@@ -1,32 +1,43 @@
-# React + TypeScript + Vite
+# Smart Calculator
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A modern, responsive, and user-friendly scientific calculator built with **React, TypeScript, and Vite**.
 
-Currently, two official plugins are available:
+Smart Calculator provides standard arithmetic operations together with useful scientific functions, calculation history, answer reuse, keyboard support, and responsive design for desktop and mobile devices.
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+---
 
-## React Compiler
+## Overview
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+The Smart Calculator project was developed to demonstrate how a modern calculator application can be built using React and TypeScript.
 
-## Expanding the Oxlint configuration
+The application combines normal calculator functionality with scientific operations while maintaining a clean and simple user interface.
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+The project focuses on:
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
+- Modern UI/UX
+- Type-safe React development
+- Scientific calculations
+- Responsive design
+- Reusable React components
+- Calculation history
+- Keyboard interaction
+- Error handling
 
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+---
+
+## Features
+
+### Basic Calculator Operations
+
+The calculator supports common arithmetic operations:
+
+- Addition `+`
+- Subtraction `−`
+- Multiplication `×`
+- Division `÷`
+- Percentage `%`
+- Decimal calculations
+- Parentheses
+- Clear all `AC`
+- Delete / Backspace
+- Equals `=`
